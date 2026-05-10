@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的账户 - 虚拟股票投资平台</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-chart-line"></i>
+                <span>虚拟股神</span>
+            </div>
+            <div class="nav-links">
+                <a href="index.html">首页</a>
+                <a href="market.html">市场</a>
+                <a href="dashboard.html" class="active">我的账户</a>
+                <a href="admin.html" id="admin-link" style="display:none;">管理</a>
+                <span id="user-info" style="margin-right: 1rem;"></span>
+                <button id="logout-btn" class="btn-logout" style="display:none;">登出</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="dashboard-header">
+            <h1>我的投资账户</h1>
+            <p id="account-summary"></p>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="dashboard-card">
+                <h2><i class="fas fa-wallet"></i> 账户概览</h2>
+                <div class="account-info">
+                    <div class="info-item">
+                        <span class="info-label">可用资金：</span>
+                        <span id="account-balance" class="info-value"></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">投资组合价值：</span>
+                        <span id="portfolio-value" class="info-value"></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">总资产：</span>
+                        <span id="total-assets" class="info-value"></span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">总收益率：</span>
+                        <span id="total-return" class="info-value"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-card">
+                <h2><i class="fas fa-chart-pie"></i> 投资组合分布</h2>
+                <div class="chart-container">
+                    <canvas id="portfolio-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="dashboard-card full-width">
+                <h2><i class="fas fa-suitcase"></i> 持股详情</h2>
+                <div id="portfolio-table-container">
+                    <table id="portfolio-table">
+                        <thead>
+                            <tr>
+                                <th>股票代码</th>
+                                <th>股票名称</th>
+                                <th>持股数量</th>
+                                <th>当前价格</th>
+                                <th>持仓价值</th>
+                                <th>收益率</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="portfolio-table-body">
+                            <!-- 由JS动态生成 -->
+                        </tbody>
+                    </table>
+                </div>
+                <p id="empty-portfolio" style="display:none; text-align: center; padding: 2rem; color: #666;">
+                    您还没有持有任何股票，<a href="market.html" style="color: #3b82f6;">去市场看看</a>
+                </p>
+            </div>
+
+            <div class="dashboard-card full-width">
+                <h2><i class="fas fa-history"></i> 交易记录</h2>
+                <div id="transaction-history">
+                    <table id="transaction-table">
+                        <thead>
+                            <tr>
+                                <th>日期</th>
+                                <th>类型</th>
+                                <th>股票</th>
+                                <th>数量</th>
+                                <th>价格</th>
+                                <th>总金额</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transaction-table-body">
+                            <!-- 由JS动态生成 -->
+                        </tbody>
+                    </table>
+                </div>
+                <p id="empty-transactions" style="display:none; text-align: center; padding: 2rem; color: #666;">
+                    暂无交易记录
+                </p>
+            </div>
+
+            <div class="dashboard-card full-width">
+                <h2><i class="fas fa-trophy"></i> 排行榜</h2>
+                <div id="leaderboard">
+                    <table id="leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>用户名</th>
+                                <th>总资产</th>
+                                <th>收益率</th>
+                                <th>持仓价值</th>
+                                <th>可用资金</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-table-body">
+                            <!-- 由JS动态生成 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>虚拟股票投资平台 &copy; 2026 | 仅供模拟使用</p>
+    </footer>
+
+    <script src="js/auth.js"></script>
+    <script src="js/market.js"></script>
+    <script src="js/portfolio.js"></script>
+    <script>
+        // 检查登录状态
+        const user = checkLoginStatus();
+        if (!user) {
+            alert('请先登录');
+            window.location.href = 'login.html';
+        } else {
+            // 加载用户数据
+            loadUserPortfolio();
+            loadTransactionHistory();
+            loadLeaderboard();
+            
+            // 更新账户概览
+            updateAccountOverview();
+        }
+    </script>
+</body>
+</html>

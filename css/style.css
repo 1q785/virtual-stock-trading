@@ -468,4 +468,183 @@ tr:hover {
         flex-direction: column;
         align-items: stretch;
     }
+}/* 补充样式 */
+
+/* 仪表板样式 */
+.dashboard-header {
+    margin: 2rem 0;
+    text-align: center;
+}
+
+.dashboard-header h1 {
+    color: #1e3a8a;
+    margin-bottom: 0.5rem;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.dashboard-card {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-card.full-width {
+    grid-column: 1 / -1;
+}
+
+.dashboard-card h2 {
+    color: #1e3a8a;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dashboard-card h2 i {
+    color: #3b82f6;
+}
+
+.account-info {
+    display: grid;
+    gap: 1rem;
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    color: #6b7280;
+}
+
+.info-value {
+    font-weight: bold;
+    color: #1e3a8a;
+}
+
+.chart-container {
+    height: 300px;
+    position: relative;
+}
+
+/* 表格样式 */
+#portfolio-table, #transaction-table, #leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+#portfolio-table th, #transaction-table th, #leaderboard-table th {
+    background-color: #f8fafc;
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: #1e3a8a;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+#portfolio-table td, #transaction-table td, #leaderboard-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+#portfolio-table tr:hover, #transaction-table tr:hover, #leaderboard-table tr:hover {
+    background-color: #f8fafc;
+}
+
+.top-rank {
+    font-weight: bold;
+}
+
+/* 市场页面样式 */
+.market-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.btn-refresh {
+    padding: 0.5rem 1rem;
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background-color 0.3s;
+}
+
+.btn-refresh:hover {
+    background-color: #1e3a8a;
+}
+
+.market-filters {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    align-items: center;
+}
+
+.market-filters input, .market-filters select {
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    min-width: 200px;
+}
+
+/* 模态框动画 */
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-content {
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+/* 响应式设计补充 */
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .market-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .market-filters input, .market-filters select {
+        min-width: auto;
+    }
+    
+    #portfolio-table, #transaction-table, #leaderboard-table {
+        display: block;
+        overflow-x: auto;
+    }
+    
+    .account-info {
+        grid-template-columns: 1fr;
+    }
+    
+    .info-item {
+        flex-direction: column;
+        gap: 0.3rem;
+    }
 }
