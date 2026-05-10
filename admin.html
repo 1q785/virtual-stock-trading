@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理面板 - 虚拟股票投资平台</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-chart-line"></i>
+                <span>虚拟股神 - 管理面板</span>
+            </div>
+            <div class="nav-links">
+                <a href="index.html">首页</a>
+                <a href="market.html">市场</a>
+                <a href="dashboard.html">我的账户</a>
+                <a href="admin.html" class="active">管理</a>
+                <span id="user-info" style="margin-right: 1rem;"></span>
+                <button id="logout-btn" class="btn-logout" style="display:none;">登出</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container admin-container">
+        <h1>管理控制面板</h1>
+        
+        <div class="admin-controls">
+            <h2><i class="fas fa-sliders-h"></i> 股票价格控制</h2>
+            <p>在此处调整股票价格。所有更改将立即生效。</p>
+            
+            <div id="stock-controls-container">
+                <!-- 股票控制项将由JS动态生成 -->
+            </div>
+            
+            <div style="margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                <button onclick="adminManager.randomUpdateAll()" class="btn-update" style="background-color: #8b5cf6;">
+                    <i class="fas fa-random"></i> 随机更新所有股票
+                </button>
+                <button onclick="adminManager.resetAllStocks()" class="btn-update" style="background-color: #f59e0b;">
+                    <i class="fas fa-undo"></i> 重置所有股票价格
+                </button>
+                <button onclick="adminManager.addNewStock()" class="btn-update" style="background-color: #10b981;">
+                    <i class="fas fa-plus"></i> 添加新股票
+                </button>
+            </div>
+        </div>
+        
+        <div class="admin-controls">
+            <h2><i class="fas fa-trophy"></i> 用户排行榜</h2>
+            <div id="leaderboard-container">
+                <!-- 排行榜将由JS动态生成 -->
+            </div>
+        </div>
+        
+        <div class="admin-controls">
+            <h2><i class="fas fa-history"></i> 操作日志</h2>
+            <button onclick="adminManager.viewAdminLogs()" class="btn-update" style="margin-bottom: 1rem;">
+                <i class="fas fa-sync-alt"></i> 刷新日志
+            </button>
+            <div id="admin-logs-container">
+                <!-- 操作日志将由JS动态生成 -->
+            </div>
+        </div>
+        
+        <div class="admin-controls">
+            <h2><i class="fas fa-database"></i> 系统管理</h2>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <button onclick="exportData()" class="btn-update" style="background-color: #3b82f6;">
+                    <i class="fas fa-download"></i> 导出数据
+                </button>
+                <button onclick="importData()" class="btn-update" style="background-color: #10b981;">
+                    <i class="fas fa-upload"></i> 导入数据
+                </button>
+                <button onclick="clearAllData()" class="btn-update" style="background-color: #ef4444;">
+                    <i class="fas fa-trash"></i> 清除所有数据
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>虚拟股票投资平台 &copy; 2026 | 仅供模拟使用</p>
+    </footer>
+
+    <script src="js/auth.js"></script>
+    <script src="js/market.js"></script>
+    <script src="js/admin.js"></script>
+    <script>
+        // 初始化管理员页面
+        initAdminPage();
+        
+        // 导出数据
+        function exportData() {
+            const data = {
+                stocks: stockManager.stocks,
+                users: authManager.users,
+                stockHistory: stockManager.history,
+                adminLogs: JSON.parse(localStorage.getItem('adminLogs')) || []
+            };
+            
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'virtual-stock-data.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            alert('数据已导出为 virtual-stock-data.json');
+        }
+        
+        // 导入数据
+        function importData() {
+            if (!confirm('导入数据将覆盖现有数据，确定要继续吗？')) {
+                return;
+            }
+            
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = function(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        
+                        // 验证数据格式
+                        if (!data.stocks || !data.users) {
+                            alert('数据格式错误');
+                            return;
+                        }
+                        
+                        // 保存数据
+                        localStorage.setItem('virtualStocks', JSON.stringify(data.stocks));
+                        localStorage.setItem('virtualStockUsers', JSON.stringify(data.users));
+                        
+                        if (data.stockHistory) {
+                            localStorage.setItem('stockHistory', JSON.stringify(data.stockHistory));
+                        }
+                        
+                        if (data.adminLogs) {
+                            localStorage.setItem('adminLogs', JSON.stringify(data.adminLogs));
+                        }
+                        
+                        // 重新加载页面
+                        location.reload();
+                        
+                        alert('数据导入成功！');
+                    } catch (error) {
+                        alert('导入失败：' + error.message);
+                    }
+                };
+                
+                reader.readAsText(file);
+            };
+            
+            input.click();
+        }
+        
+        // 清除所有数据
+        function clearAllData() {
+            if (!confirm('确定要清除所有数据吗？此操作不可撤销！')) {
+                return;
+            }
+            
+            if (!confirm('再次确认：这将删除所有用户、股票和交易记录！')) {
+                return;
+            }
+            
+            // 清除所有本地存储
+            localStorage.clear();
+            
+            // 重新加载页面
+            location.reload();
+            
+            alert('所有数据已清除，系统已重置。');
+        }
+        
+        // 更新股票价格（供管理员界面调用）
+        window.updateStockPrice = function(symbol) {
+            adminManager.updateStockPrice(symbol);
+        };
+    </script>
+</body>
+</html>

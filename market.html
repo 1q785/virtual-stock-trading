@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>股票市场 - 虚拟股票投资平台</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-chart-line"></i>
+                <span>虚拟股神</span>
+            </div>
+            <div class="nav-links">
+                <a href="index.html">首页</a>
+                <a href="market.html" class="active">市场</a>
+                <a href="dashboard.html">我的账户</a>
+                <a href="admin.html" id="admin-link" style="display:none;">管理</a>
+                <span id="user-info" style="margin-right: 1rem;"></span>
+                <button id="logout-btn" class="btn-logout" style="display:none;">登出</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container market-container">
+        <div class="market-header">
+            <h1>股票市场</h1>
+            <div class="market-info">
+                <span id="market-time"></span>
+                <button onclick="refreshMarket()" class="btn-refresh">
+                    <i class="fas fa-sync-alt"></i> 刷新
+                </button>
+            </div>
+        </div>
+
+        <div class="market-filters">
+            <input type="text" id="search-stock" placeholder="搜索股票代码或名称..." onkeyup="filterStocks()">
+            <select id="sort-stocks" onchange="sortStocks()">
+                <option value="symbol">按代码排序</option>
+                <option value="name">按名称排序</option>
+                <option value="price">按价格排序</option>
+                <option value="change">按涨跌幅排序</option>
+            </select>
+        </div>
+
+        <div class="market-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>股票代码/名称</th>
+                        <th>当前价格</th>
+                        <th>涨跌幅</th>
+                        <th>描述</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="stocks-table-body">
+                    <!-- 由JS动态生成 -->
+                </tbody>
+            </table>
+        </div>
+
+        <div class="user-balance" style="margin-top: 2rem; padding: 1rem; background-color: #f8fafc; border-radius: 8px;">
+            <h3>账户信息</h3>
+            <p>可用资金: <span id="user-balance" style="font-weight: bold; color: #1e3a8a;">$0.00</span></p>
+        </div>
+
+        <div class="transaction-modal" id="transaction-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+            <div class="modal-content" style="background-color: white; padding: 2rem; border-radius: 8px; max-width: 500px; width: 90%;">
+                <h2 id="modal-title"></h2>
+                <div id="modal-stock-info"></div>
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label for="quantity-input">数量:</label>
+                    <input type="number" id="quantity-input" min="1" value="1" style="width: 100%; padding: 0.5rem; margin-top: 0.5rem;">
+                </div>
+                <div id="transaction-details" style="margin-top: 1rem; padding: 1rem; background-color: #f8fafc; border-radius: 4px;"></div>
+                <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button onclick="cancelTransaction()" style="padding: 0.5rem 1rem; background-color: #e5e7eb; border: none; border-radius: 4px; cursor: pointer;">取消</button>
+                    <button onclick="confirmTransaction()" id="confirm-transaction-btn" style="padding: 0.5rem 1rem; background-color: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">确认</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>虚拟股票投资平台 &copy; 2026 | 仅供模拟使用</p>
+    </footer>
+
+    <script src="js/auth.js"></script>
+    <script src="js/market.js"></script>
+    <script>
+        // 检查登录状态
+        const user = checkLoginStatus();
+        if (!user) {
+            alert('请先登录');
+            window.location.href = 'login.html';
+        } else {
+            // 加载市场数据
+            loadStockMarket();
+            updateUserBalance();
+            
+            // 更新时间
+            updateMarketTime();
+            setInterval(updateMarketTime, 60000); // 每分钟更新一次
+        }
+        
+        // 当前交易的股票信息
+        let currentTransaction = {
+            type: '', // 'buy' 或 'sell'
+            symbol: '',
+            price: 0
+        };
+        
+        // 刷新市场
+        function refreshMarket() {
+            loadStockMarket();
+            updateUserBalance();
+            alert('市场数据已刷新');
+        }
+        
+        // 过滤股票
+        function filterStocks() {
+            const searchTerm = document.getElementById('search-stock').value.toLowerCase();
+            const rows = document.querySelectorAll('#stocks-table-body tr');
+            
+            rows.forEach(row => {
+                const symbol = row.cells[0].textContent.toLowerCase();
+                const name = row.cells[0].querySelector('small').textContent.toLowerCase();
+                
+                if (symbol.includes(searchTerm) || name.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+        
+        // 排序股票
+        function sortStocks() {
+            const sortBy = document.getElementById('sort-stocks').value;
+            loadStockMarket(sortBy);
+        }
+        
+        // 更新用户余额显示
+        function updateUserBalance() {
+            const fullUser = authManager.getUser(user.username);
+            if (fullUser) {
+                document.getElementById('user-balance').textContent = `$${fullUser.balance.toFixed(2)}`;
+            }
+        }
+        
+        // 更新时间显示
+        function updateMarketTime() {
+            const now = new Date();
+            const timeString = now.toLocaleString('zh-CN');
+            document.getElementById('market-time').textContent = `更新时间: ${timeString}`;
+        }
+        
+        // 显示交易模态框
+        function showTransactionModal(type, symbol, price) {
+            const stock = stockManager.getStock(symbol);
+            if (!stock) return;
+            
+            currentTransaction = { type, symbol, price: stock.price };
+            
+            const modal = document.getElementById('transaction-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const stockInfo = document.getElementById('modal-stock-info');
+            const quantityInput = document.getElementById('quantity-input');
+            
+            if (type === 'buy') {
+                modalTitle.textContent = `买入 ${stock.name} (${symbol})`;
+                document.getElementById('confirm-transaction-btn').textContent = '确认买入';
+                document.getElementById('confirm-transaction-btn').style.backgroundColor = '#10b981';
+            } else {
+                modalTitle.textContent = `卖出 ${stock.name} (${symbol})`;
+                document.getElementById('confirm-transaction-btn').textContent = '确认卖出';
+                document.getElementById('confirm-transaction-btn').style.backgroundColor = '#ef4444';
+            }
+            
+            stockInfo.innerHTML = `
+                <p>当前价格: <strong>$${stock.price.toFixed(2)}</strong></p>
+                <p>涨跌幅: <span class="${stock.change >= 0 ? 'positive' : 'negative'}">${stock.change >= 0 ? '+' : ''}${stock.change}%</span></p>
+            `;
+            
+            quantityInput.value = 1;
+            quantityInput.max = type === 'sell' ? (authManager.getUser(user.username).portfolio[symbol] || 0) : '';
+            quantityInput.oninput = updateTransactionDetails;
+            
+            updateTransactionDetails();
+            modal.style.display = 'flex';
+        }
+        
+        // 更新交易详情
+        function updateTransactionDetails() {
+            const quantity = parseInt(document.getElementById('quantity-input').value) || 0;
+            const total = quantity * currentTransaction.price;
+            const fullUser = authManager.getUser(user.username);
+            
+            let details = `数量: ${quantity}<br>`;
+            details += `单价: $${currentTransaction.price.toFixed(2)}<br>`;
+            details += `总计: $${total.toFixed(2)}<br>`;
+            
+            if (currentTransaction.type === 'buy') {
+                if (total > fullUser.balance) {
+                    details += `<span style="color: #ef4444;">余额不足，最多可买 ${Math.floor(fullUser.balance / currentTransaction.price)} 股</span>`;
+                } else {
+                    details += `交易后余额: $${(fullUser.balance - total).toFixed(2)}`;
+                }
+            } else {
+                details += `交易后余额: $${(fullUser.balance + total).toFixed(2)}`;
+            }
+            
+            document.getElementById('transaction-details').innerHTML = details;
+        }
+        
+        // 确认交易
+        function confirmTransaction() {
+            const quantity = parseInt(document.getElementById('quantity-input').value) || 0;
+            
+            if (quantity <= 0) {
+                alert('请输入有效的数量');
+                return;
+            }
+            
+            if (currentTransaction.type === 'buy') {
+                buyStock(currentTransaction.symbol, quantity);
+            } else {
+                sellStock(currentTransaction.symbol, quantity);
+            }
+            
+            cancelTransaction();
+        }
+        
+        // 取消交易
+        function cancelTransaction() {
+            document.getElementById('transaction-modal').style.display = 'none';
+        }
+        
+        // 修改buyStock和sellStock函数，使其接受数量参数
+        window.buyStock = function(symbol, quantity = null) {
+            if (quantity === null) {
+                // 如果没有提供数量，显示模态框
+                const stock = stockManager.getStock(symbol);
+                if (stock) {
+                    showTransactionModal('buy', symbol, stock.price);
+                }
+            } else {
+                // 如果提供了数量，直接执行买入
+                const fullUser = authManager.getUser(user.username);
+                const stock = stockManager.getStock(symbol);
+                
+                if (!stock) {
+                    alert('股票不存在');
+                    return;
+                }
+                
+                const totalCost = quantity * stock.price;
+                
+                if (totalCost > fullUser.balance) {
+                    alert('余额不足');
+                    return;
+                }
+                
+                // 更新用户信息
+                fullUser.balance -= totalCost;
+                
+                if (!fullUser.portfolio[symbol]) {
+                    fullUser.portfolio[symbol] = 0;
+                }
+                
+                fullUser.portfolio[symbol] += quantity;
+                
+                // 记录交易
+                if (!fullUser.transactionHistory) {
+                    fullUser.transactionHistory = [];
+                }
+                
+                fullUser.transactionHistory.push({
+                    type: '买入',
+                    symbol: symbol,
+                    name: stock.name,
+                    quantity: quantity,
+                    price: stock.price,
+                    total: totalCost,
+                    date: new Date().toISOString()
+                });
+                
+                authManager.updateUser(fullUser);
+                updateUserBalance();
+                
+                alert(`成功买入 ${quantity} 股 ${stock.name}，花费 $${totalCost.toFixed(2)}`);
+            }
+        };
+        
+        window.sellStock = function(symbol, quantity = null) {
+            if (quantity === null) {
+                // 如果没有提供数量，显示模态框
+                const stock = stockManager.getStock(symbol);
+                if (stock) {
+                    showTransactionModal('sell', symbol, stock.price);
+                }
+            } else {
+                // 如果提供了数量，直接执行卖出
+                const fullUser = authManager.getUser(user.username);
+                const stock = stockManager.getStock(symbol);
+                
+                if (!stock) {
+                    alert('股票不存在');
+                    return;
+                }
+                
+                const ownedShares = fullUser.portfolio[symbol] || 0;
+                
+                if (quantity > ownedShares) {
+                    alert(`卖出数量不能超过持有数量 (${ownedShares})`);
+                    return;
+                }
+                
+                const totalValue = quantity * stock.price;
+                
+                // 更新用户信息
+                fullUser.balance += totalValue;
+                fullUser.portfolio[symbol] -= quantity;
+                
+                if (fullUser.portfolio[symbol] === 0) {
+                    delete fullUser.portfolio[symbol];
+                }
+                
+                // 记录交易
+                if (!fullUser.transactionHistory) {
+                    fullUser.transactionHistory = [];
+                }
+                
+                fullUser.transactionHistory.push({
+                    type: '卖出',
+                    symbol: symbol,
+                    name: stock.name,
+                    quantity: quantity,
+                    price: stock.price,
+                    total: totalValue,
+                    date: new Date().toISOString()
+                });
+                
+                authManager.updateUser(fullUser);
+                updateUserBalance();
+                
+                alert(`成功卖出 ${quantity} 股 ${stock.name}，获得 $${totalValue.toFixed(2)}`);
+            }
+        };
+    </script>
+</body>
+</html>
