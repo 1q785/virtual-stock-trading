@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 虚拟股票投资平台</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-chart-line"></i>
+                <span>虚拟股神</span>
+            </div>
+            <div class="nav-links">
+                <a href="index.html">首页</a>
+                <a href="market.html">市场</a>
+                <a href="login.html" class="active">登录/注册</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="auth-container">
+        <div class="auth-box">
+            <div id="login-form">
+                <h2>用户登录</h2>
+                <div class="form-group">
+                    <label for="login-username">用户名</label>
+                    <input type="text" id="login-username" placeholder="请输入用户名">
+                </div>
+                <div class="form-group">
+                    <label for="login-password">密码</label>
+                    <input type="password" id="login-password" placeholder="请输入密码">
+                </div>
+                <button class="btn-submit" onclick="login()">登录</button>
+                <div class="auth-switch">
+                    还没有账户？ <a href="#" onclick="showRegisterForm()">立即注册</a>
+                </div>
+            </div>
+            
+            <div id="register-form" style="display: none;">
+                <h2>用户注册</h2>
+                <div class="form-group">
+                    <label for="register-username">用户名</label>
+                    <input type="text" id="register-username" placeholder="请输入用户名">
+                </div>
+                <div class="form-group">
+                    <label for="register-email">邮箱</label>
+                    <input type="email" id="register-email" placeholder="请输入邮箱">
+                </div>
+                <div class="form-group">
+                    <label for="register-password">密码</label>
+                    <input type="password" id="register-password" placeholder="请输入密码">
+                </div>
+                <div class="form-group">
+                    <label for="register-confirm-password">确认密码</label>
+                    <input type="password" id="register-confirm-password" placeholder="请再次输入密码">
+                </div>
+                <button class="btn-submit" onclick="register()">注册</button>
+                <div class="auth-switch">
+                    已有账户？ <a href="#" onclick="showLoginForm()">立即登录</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>虚拟股票投资平台 &copy; 2026 | 仅供模拟使用</p>
+    </footer>
+
+    <script src="js/auth.js"></script>
+    <script>
+        // 显示注册表单
+        function showRegisterForm() {
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('register-form').style.display = 'block';
+        }
+        
+        // 显示登录表单
+        function showLoginForm() {
+            document.getElementById('register-form').style.display = 'none';
+            document.getElementById('login-form').style.display = 'block';
+        }
+        
+        // 登录功能
+        function login() {
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            
+            if (!username || !password) {
+                alert('请输入用户名和密码');
+                return;
+            }
+            
+            const result = authManager.login(username, password);
+            
+            if (result.success) {
+                alert('登录成功！');
+                
+                // 跳转到首页
+                window.location.href = 'index.html';
+            } else {
+                alert(result.message);
+            }
+        }
+        
+        // 注册功能
+        function register() {
+            const username = document.getElementById('register-username').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const confirmPassword = document.getElementById('register-confirm-password').value;
+            
+            if (!username || !email || !password || !confirmPassword) {
+                alert('请填写所有字段');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                alert('两次输入的密码不一致');
+                return;
+            }
+            
+            if (password.length < 6) {
+                alert('密码长度至少6位');
+                return;
+            }
+            
+            const result = authManager.register(username, password, email);
+            
+            if (result.success) {
+                alert('注册成功！已自动登录。初始资金为 $100,000');
+                
+                // 自动登录
+                authManager.login(username, password);
+                
+                // 跳转到首页
+                window.location.href = 'index.html';
+            } else {
+                alert(result.message);
+            }
+        }
+        
+        // 检查是否已登录
+        const user = authManager.checkLoginStatus();
+        if (user) {
+            alert('您已登录，将跳转到首页');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

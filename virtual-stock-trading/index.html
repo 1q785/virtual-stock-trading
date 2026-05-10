@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>虚拟股票投资平台</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-chart-line"></i>
+                <span>虚拟股神</span>
+            </div>
+            <div class="nav-links">
+                <a href="index.html" class="active">首页</a>
+                <a href="market.html">市场</a>
+                <a href="dashboard.html">我的账户</a>
+                <a href="admin.html" id="admin-link" style="display:none;">管理</a>
+                <a href="login.html" id="login-link">登录/注册</a>
+                <span id="user-info" style="display:none;"></span>
+                <button id="logout-btn" class="btn-logout" style="display:none;">登出</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <div class="hero-content">
+            <h1>虚拟股票投资模拟平台</h1>
+            <p>体验真实投资环境，无需真实资金！</p>
+            <p>管理员每日调整股价，挑战您的投资眼光！</p>
+            <div class="hero-buttons">
+                <a href="login.html" class="btn-primary">立即开始</a>
+                <a href="market.html" class="btn-secondary">查看市场</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="features">
+        <h2>平台特色</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <i class="fas fa-lock"></i>
+                <h3>零风险投资</h3>
+                <p>使用虚拟货币进行模拟交易，无需承担真实风险</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-chart-bar"></i>
+                <h3>实时排行榜</h3>
+                <p>查看其他投资者的收益率排名，挑战成为股神</p>
+            </div>
+            <div class="feature-card">
+                <i class="fas fa-sliders-h"></i>
+                <h3>管理员调控</h3>
+                <p>股票价格由管理员每日调整，模拟真实市场波动</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="market-overview">
+        <h2>今日热门股票</h2>
+        <div id="hot-stocks" class="stocks-list">
+            <!-- 热门股票将由JS动态加载 -->
+        </div>
+    </div>
+
+    <footer>
+        <p>虚拟股票投资平台 &copy; 2026 | 仅供模拟使用</p>
+    </footer>
+
+    <script src="js/auth.js"></script>
+    <script src="js/utils.js"></script>
+    <script>
+        // 检查登录状态
+        checkLoginStatus();
+        
+        // 加载热门股票
+        document.addEventListener('DOMContentLoaded', function() {
+            loadHotStocks();
+        });
+        
+        async function loadHotStocks() {
+            try {
+                const response = await fetch('data/stocks.json');
+                const stocks = await response.json();
+                
+                const container = document.getElementById('hot-stocks');
+                container.innerHTML = '';
+                
+                // 显示前5只股票
+                stocks.slice(0, 5).forEach(stock => {
+                    const changeClass = stock.change >= 0 ? 'positive' : 'negative';
+                    const changeIcon = stock.change >= 0 ? '▲' : '▼';
+                    
+                    const stockElement = document.createElement('div');
+                    stockElement.className = 'stock-item';
+                    stockElement.innerHTML = `
+                        <div class="stock-symbol">${stock.symbol}</div>
+                        <div class="stock-name">${stock.name}</div>
+                        <div class="stock-price">$${stock.price.toFixed(2)}</div>
+                        <div class="stock-change ${changeClass}">${changeIcon} ${Math.abs(stock.change)}%</div>
+                    `;
+                    container.appendChild(stockElement);
+                });
+            } catch (error) {
+                console.error('加载股票数据失败:', error);
+            }
+        }
+    </script>
+</body>
+</html>

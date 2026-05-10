@@ -1,0 +1,16 @@
+virtual-stock-trading/
+├── index.html              # 主页面
+├── login.html              # 登录页面
+├── admin.html             # 管理员控制面板
+├── dashboard.html         # 用户投资仪表板
+├── market.html            # 股票市场页面
+├── css/
+│   └── style.css         # 样式文件
+├── js/
+│   ├── auth.js           # 用户认证逻辑
+│   ├── market.js         # 市场数据逻辑
+│   ├── portfolio.js      # 投资组合逻辑
+│   ├── admin.js          # 管理员控制逻辑
+│   └── utils.js          # 工具函数
+└── data/
+    └── stocks.json       # 股票数据存储
